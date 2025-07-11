@@ -2,19 +2,38 @@ import connectDB from "@/lib/connectDB";
 import UserModel from "@/model/User";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "@/helpers/sendVerificationEmail";
+import { signupSchema } from "@/schemas/signupSchema";
 
 export async function POST(request: Request) {
   await connectDB();
 
   try {
-    const { username, email, password } = await request.json();
-    console.log(username, email, password);
-    if (!(username || email || password)) {
+    const body = await request.json();
+
+    const result = signupSchema.safeParse(body);
+
+    if (!result.success) {
+      const usernameErrors = result.error.format().username?._errors || [];
+      const emailErrors = result.error.format().email?._errors || [];
+      const passwordErrors = result.error.format().password?._errors || [];
+
       return Response.json(
-        { success: true, message: "All fields are required" },
+        {
+          success: false,
+          message:
+            usernameErrors?.length > 0
+              ? usernameErrors.join(", ")
+              : emailErrors?.length > 0
+                ? emailErrors.join(", ")
+                : passwordErrors?.length > 0
+                  ? passwordErrors.join(", ")
+                  : "Invalid username, email or password",
+        },
         { status: 400 }
       );
     }
+
+    const { username, email, password } = result.data;
 
     const existingUserByUsername = await UserModel.findOne({
       username,
