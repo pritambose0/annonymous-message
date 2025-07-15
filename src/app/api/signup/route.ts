@@ -93,8 +93,10 @@ export async function POST(request: Request) {
       username,
       verifyCode
     );
+    // console.log("Email Response:", emailResponse);
 
     if (!emailResponse.success) {
+      await UserModel.deleteOne({ email });
       return Response.json(
         { success: false, message: emailResponse.message },
         { status: 500 }

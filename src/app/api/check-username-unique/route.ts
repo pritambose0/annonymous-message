@@ -48,7 +48,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return Response.json({ success: true, message: "Username is available" });
+    return Response.json(
+      { success: true, message: "Username is available" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error checking username", error);
     return Response.json(
