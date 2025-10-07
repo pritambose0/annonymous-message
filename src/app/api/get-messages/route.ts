@@ -20,38 +20,29 @@ export async function GET() {
   }
 
   const user = session?.user;
+
   const userId = new mongoose.Types.ObjectId(user._id);
 
   try {
     const user = await UserModel.aggregate([
-      {
-        $match: userId,
-      },
-      {
-        $unwind: "$messages",
-      },
-      {
-        $sort: { "messages.createdAt": -1 },
-      },
+      { $match: { _id: userId } },
+      { $unwind: "$messages" },
+      { $sort: { "messages.createdAt": -1 } },
       {
         $group: {
           _id: "$_id",
           messages: { $push: "$messages" },
         },
       },
+      {
+        $project: {
+          _id: 0,
+          messages: 1,
+        },
+      },
     ]);
 
-    if (!user || user.length === 0) {
-      return Response.json(
-        {
-          success: false,
-          message: "User not found",
-        },
-        { status: 404 }
-      );
-    }
-
-    return Response.json({ success: true, messages: user[0].messages });
+    return Response.json({ success: true, messages: user[0]?.messages });
   } catch (error) {
     console.error("Error fetching messages:", error);
     return Response.json(

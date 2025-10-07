@@ -26,13 +26,13 @@ const VerifyPage = () => {
   const router = useRouter();
   const params = useParams<{ username: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const form = useForm<z.infer<typeof verifySchema>>({
     resolver: zodResolver(verifySchema),
   });
 
   const onSubmit = async (data: z.infer<typeof verifySchema>) => {
     setIsSubmitting(true);
-    console.log("PARAMS", params.username);
 
     try {
       const response = await axios.post(`/api/verify-code`, {
@@ -51,6 +51,22 @@ const VerifyPage = () => {
       toast.error(axiosError.response?.data.message || "Verification failed");
     }
   };
+
+  const handleResendCode = async () => {
+    setIsResending(true);
+    try {
+      const response = await axios.post(`/api/resend-code/${params.username}`);
+      if (response.data.success) {
+        toast.success(response.data.message || "Code resent successfully");
+      }
+      setIsResending(false);
+    } catch (error) {
+      console.error("Error while resending code", error);
+      const axiosError = error as AxiosError<ApiResponse>;
+      toast.error(axiosError.response?.data.message || "Code resending failed");
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-12">
       <div className="w-full max-w-md rounded-2xl bg-white/5 backdrop-blur-lg p-8 shadow-2xl space-y-8 border border-white/10">
@@ -96,10 +112,24 @@ const VerifyPage = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin" /> "Verifying"
+                  <Loader2 className="animate-spin" /> Verifying
                 </>
               ) : (
                 "Verify"
+              )}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isResending}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-md transition duration-200"
+              onClick={handleResendCode}
+            >
+              {isResending ? (
+                <>
+                  <Loader2 className="animate-spin" /> Resending
+                </>
+              ) : (
+                "Resend Code"
               )}
             </Button>
           </form>

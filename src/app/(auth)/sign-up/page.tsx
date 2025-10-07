@@ -148,9 +148,6 @@ const page = () => {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription className="text-gray-500">
-                    We'll never share your email.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -196,7 +193,7 @@ const page = () => {
 
         <div className="mt-6 text-center text-sm text-gray-400">
           Already a member?{" "}
-          <Link href="/signin" className="text-purple-500 hover:underline">
+          <Link href="/sign-in" className="text-purple-500 hover:underline">
             Sign in here
           </Link>
         </div>
