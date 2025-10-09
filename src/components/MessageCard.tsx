@@ -31,15 +31,15 @@ const MessageCard = ({ message, onMessageDelete }: MessageProps) => {
   };
   return (
     <>
-      <Card className="bg-white shadow-md hover:shadow-lg p-3 transition-shadow duration-300 rounded-xl border border-gray-100">
+      <Card className="bg-gray-800 shadow-sm hover:shadow-md p-4 transition-shadow duration-300 rounded-xl border border-gray-700">
         <CardContent className="pb-2">
-          <p className="text-gray-800 text-base break-words">
+          <p className="text-gray-100 text-base break-words">
             {message.content}
           </p>
         </CardContent>
 
-        <CardDescription className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t border-gray-100">
-          <span className="text-gray-400">
+        <CardDescription className="flex items-center justify-between text-sm text-gray-400 pt-2 border-t border-gray-700">
+          <span>
             {message.createdAt
               ? new Date(message.createdAt).toLocaleString("en-US", {
                   dateStyle: "medium",

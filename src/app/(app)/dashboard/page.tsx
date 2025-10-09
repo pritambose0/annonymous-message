@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Message, User } from "@/model/User";
+import { Message } from "@/model/User";
 import { acceptMessagesSchema } from "@/schemas/acceptMessageSchema";
 import { ApiResponse } from "@/types/ApiResponse";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,7 +45,7 @@ const page = () => {
 
   const fetchMessages = useCallback(async (refresh: boolean = false) => {
     setLoading(true);
-    setIsSwitchLoading(true); // Keeping this for UI consistency, though it's mainly for the switch
+    setIsSwitchLoading(true);
 
     try {
       const response = await axios.get<ApiResponse>("/api/get-messages");
@@ -62,35 +62,6 @@ const page = () => {
       setIsSwitchLoading(false);
     }
   }, []);
-
-  // const {
-  //   completion,
-  //   isLoading: isGenerating,
-  //   complete,
-  //   error: completionError,
-  //   setCompletion,
-  // } = useCompletion({
-  //   api: "/api/suggest-messages",
-
-  //   onError: (error) => {
-  //     toast.error(`Error generating suggestions: ${error.message}`);
-  //   },
-  //   onFinish: (prompt, completion) => {
-  //     console.log("✅ Final Completion from Server:", completion);
-  //   },
-  // });
-
-  // // Function to trigger message generation
-  // const generateSuggestedMessages = () => {
-  //   setCompletion("");
-  //   complete("");
-  // };
-
-  // Utility to parse the streamed content
-  // const parsedSuggestedMessages = completion
-  //   .split("||")
-  //   .map((q) => q.trim())
-  //   .filter((q) => !!q);
 
   useEffect(() => {
     if (!session || !session.user) return;
@@ -129,10 +100,10 @@ const page = () => {
     toast.success("Copied to clipboard");
   };
 
-  if (!session || !session.user) {
+  if (!session || !session.user || loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-gray-700">
-        Loading...
+      <div className="flex items-center justify-center h-screen text-white">
+        <Loader2 className="animate-spin text-indigo-400" />
       </div>
     );
   }
@@ -140,24 +111,27 @@ const page = () => {
   return (
     <>
       {/* Main Dashboard */}
-      <div className="my-10 mx-4 md:mx-8 lg:mx-auto p-8 bg-white rounded-2xl shadow-lg w-full max-w-6xl">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">
+      <div className="my-10 mt-28 px-4 sm:px-6 md:px-8 lg:mx-auto p-6 sm:p-8 bg-gray-900 rounded-2xl shadow-lg max-w-6xl text-white mx-4">
+        {/* Heading */}
+        <h1 className="text-2xl sm:text-4xl font-bold mb-8 text-center sm:text-left text-white">
           User Dashboard
         </h1>
 
         {/* Unique Link Section */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Copy Your Unique Link</h2>
-          <div className="flex flex-col md:flex-row items-center gap-3">
+          <h2 className="text-base sm:text-lg font-semibold mb-3 text-gray-300 text-center sm:text-left">
+            Copy Your Unique Link
+          </h2>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Input
               type="text"
               value={profileUrl}
               disabled
-              className="flex-1 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm"
+              className="flex-1 p-3 rounded-lg border border-gray-700 bg-gray-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm text-white text-sm sm:text-base"
             />
             <Button
               onClick={copyToClipboard}
-              className="px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow"
+              className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow w-full sm:w-auto"
             >
               Copy
             </Button>
@@ -165,26 +139,28 @@ const page = () => {
         </div>
 
         {/* Accept Messages Switch */}
-        <div className="mb-8 flex items-center gap-3">
-          <Switch
-            {...register("acceptMessages")}
-            checked={acceptMessages}
-            onCheckedChange={handleSwitchChange}
-            disabled={isSwitchLoading}
-            className="border border-gray-300 shadow-sm hover:ring-1 hover:ring-indigo-500 transition-all"
-          />
-          <span className="text-gray-700 font-medium">
-            Accept Messages:{" "}
-            <span className="font-semibold text-indigo-600">
-              {acceptMessages ? "On" : "Off"}
+        <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <Switch
+              {...register("acceptMessages")}
+              checked={acceptMessages}
+              onCheckedChange={handleSwitchChange}
+              disabled={isSwitchLoading}
+              className="border border-gray-700 shadow-sm hover:ring-1 hover:ring-indigo-500 transition-all"
+            />
+            <span className="text-gray-300 font-medium text-sm sm:text-base">
+              Accept Messages:{" "}
+              <span className="font-semibold text-indigo-400">
+                {acceptMessages ? "On" : "Off"}
+              </span>
             </span>
-          </span>
+          </div>
         </div>
 
-        <Separator className="my-8" />
+        <Separator className="my-8 border-gray-700" />
 
         {/* Refresh Messages Button */}
-        <div className="flex justify-end mb-8">
+        <div className="flex justify-center sm:justify-end mb-8">
           <Button
             variant="outline"
             onClick={(e) => {
@@ -192,29 +168,30 @@ const page = () => {
               fetchMessages(true);
             }}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:shadow transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-800 hover:shadow transition-all text-gray-900 w-full sm:w-auto bg-gray-100"
           >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
-            ) : (
-              <RefreshCcw className="h-5 w-5 text-indigo-600" />
-            )}
-            <span className="hidden md:inline">Refresh Messages</span>
+            {!loading && <RefreshCcw className="h-5 w-5 text-indigo-400" />}
+            <span className="text-sm sm:text-base">Refresh Messages</span>
           </Button>
         </div>
 
         {/* Messages Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {messages.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loading && (
+            <Loader2 className="h-5 w-5 animate-spin text-indigo-400 text-center mx-auto col-span-full" />
+          )}
+
+          {messages.length > 0 &&
             messages.map((message) => (
               <MessageCard
                 key={message._id as string}
                 message={message}
                 onMessageDelete={handleDeleteMessage}
               />
-            ))
-          ) : (
-            <p className="text-gray-500 italic text-center col-span-full mt-6">
+            ))}
+
+          {messages.length === 0 && (
+            <p className="text-gray-500 italic text-center col-span-full mt-6 text-sm sm:text-base">
               No messages to display.
             </p>
           )}

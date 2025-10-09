@@ -72,14 +72,14 @@ const Page = () => {
 
   return (
     <>
-      {/* Main Container for the Public Profile Link section */}
-      <div className="min-w-[60%] mx-auto p-6 md:p-10 bg-white rounded-xl border border-gray-200 mt-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+      {/* Main Container for Anonymous Message */}
+      <div className="w-[95%] md:w-full max-w-3xl mx-auto p-6 md:p-10 bg-gray-900 text-gray-100 rounded-2xl border border-gray-700 shadow-md mt-28">
+        <h1 className="text-3xl font-bold mb-2 tracking-tight">
           Send Anonymous Message
         </h1>
-        <p className="text-base text-gray-500 mb-8">
+        <p className="text-gray-400 mb-8">
           To:{" "}
-          <strong className="text-indigo-600 font-semibold">
+          <strong className="text-indigo-400 font-semibold">
             {params.username}
           </strong>
         </p>
@@ -103,18 +103,17 @@ const Page = () => {
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700 block mb-2">
+                  <FormLabel className="text-sm font-medium mb-2 block text-gray-300">
                     Your Anonymous Message
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Type your anonymous message here (3-200 characters)..."
                       {...field}
-                      // Minimal input styling: clean border, subtle focus ring
-                      className="resize-none border border-gray-300 rounded-lg p-3 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none text-base font-normal w-full min-h-[100px] transition-colors"
+                      className="w-full min-h-[120px] p-4 rounded-xl border border-gray-600 bg-gray-900 text-gray-100 resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 transition-all duration-200"
                     />
                   </FormControl>
-                  <FormMessage className="text-xs font-medium text-red-600 mt-1" />
+                  <FormMessage className="text-xs font-medium text-red-500 mt-1" />
                 </FormItem>
               )}
             />
@@ -123,8 +122,7 @@ const Page = () => {
             <Button
               type="submit"
               disabled={loading}
-              // Crisp, high-contrast button
-              className="w-full bg-gray-900 hover:bg-indigo-600 text-white font-semibold text-base px-6 py-3 rounded-lg shadow-none transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <>
@@ -141,9 +139,9 @@ const Page = () => {
       </div>
 
       {/* Suggested Messages Section */}
-      <div className="min-w-[60%] mx-auto p-6 md:p-10 bg-white rounded-xl border border-gray-200 mt-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-indigo-600" />
+      <div className="w-[95%] md:w-full max-w-3xl mx-auto p-6 md:p-10 bg-gray-900 text-gray-100 rounded-2xl border border-gray-700 shadow-md my-6">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Lightbulb className="h-5 w-5 text-indigo-400" />
           Message Inspiration
         </h2>
 
@@ -151,8 +149,7 @@ const Page = () => {
         <Button
           onClick={generateSuggestedMessages}
           disabled={loadingSuggestions}
-          // Accent button, distinct from the primary submit button
-          className="w-full sm:w-auto px-6 py-3 rounded-lg bg-white border border-gray-300 text-gray-800 font-medium hover:bg-gray-50 transition-colors shadow-none mb-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-900 border border-gray-600 text-gray-100 font-medium hover:bg-gray-700 flex items-center justify-center gap-2 mb-6 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loadingSuggestions ? (
             <>
@@ -160,31 +157,27 @@ const Page = () => {
             </>
           ) : (
             <>
-              <Wand className="h-4 w-4 text-indigo-500" /> Generate New
+              <Wand className="h-4 w-4 text-indigo-400" /> Generate New
               Questions
             </>
           )}
         </Button>
 
-        {/* Display final, formatted list */}
-        {!loadingSuggestions && suggestedMessages.length > 0 && (
+        {/* Display suggested messages */}
+        {!loadingSuggestions && suggestedMessages.length > 0 ? (
           <ul className="space-y-3">
-            {suggestedMessages.map((q, i) => (
+            {suggestedMessages.map((msg, i) => (
               <li
-                // Minimal list item: light border, slight background on hover
-                className="border border-gray-200 rounded-lg p-4 font-normal text-center text-sm text-gray-800 bg-white hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                 key={i}
-                onClick={() => form.setValue("message", q)}
+                onClick={() => form.setValue("message", msg)}
+                className="border border-gray-700 rounded-xl p-4 text-center text-gray-100 text-sm font-normal hover:bg-gray-700 cursor-pointer transition-colors duration-200"
               >
-                {q}
+                {msg}
               </li>
             ))}
           </ul>
-        )}
-
-        {/* Initial state or post-generation clear state */}
-        {!loadingSuggestions && suggestedMessages.length === 0 && (
-          <p className="text-gray-500 italic p-4 text-center border-dashed border border-gray-300 rounded-lg">
+        ) : (
+          <p className="text-gray-400 italic p-4 text-center border-dashed border border-gray-700 rounded-xl">
             Click **Generate New Questions** to get started.
           </p>
         )}
