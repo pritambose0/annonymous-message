@@ -4,11 +4,11 @@ import UserModel from "@/model/User";
 
 export async function POST(
   request: Request,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
   await connectDB();
 
-  const username = params.username;
+  const { username } = await context.params;
   try {
     const user = await UserModel.findOne({ username });
 
