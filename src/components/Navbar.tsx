@@ -33,7 +33,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-4">
           {status === "authenticated" ? (
             <>
-              <Button className="border-gray-700 bg-gray-800 hover:bg-gray-700 hover:text-white text-gray-200 rounded-lg transition">
+              <Button className="border-gray-700 bg-blue-600 hover:bg-blue-700 hover:text-white text-gray-200 rounded-lg transition">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
               <Button
