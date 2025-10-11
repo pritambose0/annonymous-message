@@ -14,6 +14,12 @@ import { Button } from "@/components/ui/button";
 import messages from "@/messages.json";
 import Link from "next/link";
 
+type Message = {
+  title: string;
+  content: string;
+  received: string;
+};
+
 export default function LandingPage() {
   const features = [
     {
@@ -60,9 +66,11 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <Button className="bg-blue-600 text-white px-8 py-3 rounded-xl shadow hover:bg-blue-700 transition">
-              <Link href="/sign-up">Get Started</Link>
-            </Button>
+            <Link href={"/sign-up"}>
+              <Button className="bg-blue-600 text-white px-10 py-4 rounded-2xl shadow hover:bg-blue-700 transition">
+                Get Started
+              </Button>
+            </Link>
           </motion.div>
         </section>
 
@@ -70,7 +78,7 @@ export default function LandingPage() {
         <section className="w-full max-w-2xl mb-24 px-6 md:px-0">
           <Carousel plugins={[Autoplay({ delay: 3000 })]} className="w-full">
             <CarouselContent>
-              {messages.map((msg: any, i: number) => (
+              {messages.map((msg: Message, i: number) => (
                 <CarouselItem key={i}>
                   <Card className="bg-gray-800 border border-gray-700 shadow-sm rounded-xl p-6 hover:shadow-md transition z-10">
                     <CardHeader className="text-gray-400 font-medium text-sm mb-2 text-center">
@@ -119,9 +127,11 @@ export default function LandingPage() {
           <p className="text-gray-300 mb-8">
             Join thousands of users sharing feedback anonymously today.
           </p>
-          <Button className="bg-blue-600 text-white px-10 py-4 rounded-2xl shadow hover:bg-blue-700 transition">
-            <Link href="/sign-up">Get Started</Link>
-          </Button>
+          <Link href={"/sign-up"}>
+            <Button className="bg-blue-600 text-white px-10 py-4 rounded-2xl shadow hover:bg-blue-700 transition">
+              Get Started
+            </Button>
+          </Link>
         </section>
       </main>
 

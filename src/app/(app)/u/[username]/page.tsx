@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,8 @@ const Page = () => {
         .filter(Boolean);
       setSuggestedMessages(parsed);
     } catch (error) {
-      toast.error("Failed to generate suggestions");
+      const axiosError = error as AxiosError<ApiResponse>;
+      toast.error(axiosError.response?.data.message);
     } finally {
       setLoadingSuggestions(false);
     }

@@ -1,7 +1,7 @@
 import connectDB from "@/lib/connectDB";
 import UserModel from "@/model/User";
 import bcrypt from "bcryptjs";
-import { AuthOptions } from "next-auth";
+import { AuthOptions, User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 export const authOptions: AuthOptions = {
@@ -10,10 +10,14 @@ export const authOptions: AuthOptions = {
       id: "credentials",
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
+        identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: any, _): Promise<any> {
+      async authorize(credentials): Promise<NextAuthUser> {
+        if (!credentials) {
+          throw new Error("No credentials provided");
+        }
+
         await connectDB();
         try {
           const user = await UserModel.findOne({
@@ -39,9 +43,13 @@ export const authOptions: AuthOptions = {
           if (!isPasswordCorrect) {
             throw new Error("Password is incorrect");
           }
-          return user;
-        } catch (error: any) {
-          throw new Error(error);
+          return user as NextAuthUser;
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            throw new Error(error.message);
+          } else {
+            throw new Error(String(error));
+          }
         }
       },
     }),

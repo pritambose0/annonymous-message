@@ -36,7 +36,8 @@ export async function POST(
       success: true,
       message: "Verification code sent successfully",
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("Error sending verification code", error);
     return Response.json(
       { success: false, message: "Something went wrong" },
       { status: 500 }
