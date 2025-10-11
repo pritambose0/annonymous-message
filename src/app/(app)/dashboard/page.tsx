@@ -168,7 +168,7 @@ const Page = () => {
               fetchMessages(true);
             }}
             disabled={loading}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-800 hover:shadow transition-all text-gray-900 w-full sm:w-auto bg-gray-100"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-800 hover:shadow transition-all text-gray-900 w-full sm:w-auto bg-gray-100 hover:bg-gray-200"
           >
             {!loading && <RefreshCcw className="h-5 w-5 text-indigo-400" />}
             <span className="text-sm sm:text-base">Refresh Messages</span>
