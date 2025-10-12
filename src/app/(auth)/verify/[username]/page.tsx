@@ -77,6 +77,10 @@ const VerifyPage = () => {
           <p className="mt-2 text-sm text-gray-400">
             Enter the 6-digit code we sent to your email
           </p>
+          <p className="text-sm text-orange-400 italic mt-2">
+            If you don’t see the email, check your spam/junk folder — sometimes
+            it likes to hide from inboxes! 😎
+          </p>
         </div>
 
         <Form {...form}>
@@ -118,8 +122,9 @@ const VerifyPage = () => {
                 "Verify"
               )}
             </Button>
+
             <Button
-              type="submit"
+              type="button"
               disabled={isResending}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-md transition duration-200"
               onClick={handleResendCode}
