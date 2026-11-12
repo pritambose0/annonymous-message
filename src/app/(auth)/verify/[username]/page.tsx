@@ -1,6 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios, { AxiosError } from "axios";
+import { toast } from "sonner";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
+  MailCheck,
+  RotateCcw,
+} from "lucide-react";
+
+import AuthShell from "@/components/auth/AuthShell";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -10,137 +26,213 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { verifySchema } from "@/schemas/verifySchema";
 import { ApiResponse } from "@/types/ApiResponse";
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { AxiosError } from "axios";
-import { useParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 
 const VerifyPage = () => {
   const router = useRouter();
   const params = useParams<{ username: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const form = useForm<z.infer<typeof verifySchema>>({
     resolver: zodResolver(verifySchema),
+    defaultValues: { code: "" },
   });
 
   const onSubmit = async (data: z.infer<typeof verifySchema>) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
+    setErrorMessage("");
 
     try {
-      const response = await axios.post(`/api/verify-code`, {
+      const response = await axios.post<ApiResponse>("/api/verify-code", {
         username: params.username,
         code: data.code,
       });
+
       if (response.data.success) {
-        router.replace("/sign-in");
-        toast.success(response.data.message || "Verification successful");
+        toast.success(response.data.message || "Account verified");
+        setVerified(true);
       }
-      setIsSubmitting(false);
     } catch (error) {
-      setIsSubmitting(false);
-      console.error("Error while verifying code", error);
       const axiosError = error as AxiosError<ApiResponse>;
-      toast.error(axiosError.response?.data.message || "Verification failed");
+      const message =
+        axiosError.response?.data.message ||
+        "That code didn't work. Please try again.";
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleResendCode = async () => {
+    if (isResending) return;
     setIsResending(true);
+
     try {
-      const response = await axios.post(`/api/resend-code/${params.username}`);
+      const response = await axios.post<ApiResponse>(
+        `/api/resend-code/${params.username}`
+      );
       if (response.data.success) {
-        toast.success(response.data.message || "Code resent successfully");
+        toast.success(response.data.message || "Verification code resent");
       }
-      setIsResending(false);
     } catch (error) {
-      console.error("Error while resending code", error);
       const axiosError = error as AxiosError<ApiResponse>;
-      toast.error(axiosError.response?.data.message || "Code resending failed");
+      toast.error(
+        axiosError.response?.data.message || "Couldn't resend the code"
+      );
+    } finally {
+      setIsResending(false);
     }
   };
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl bg-white/5 backdrop-blur-lg p-8 shadow-2xl space-y-8 border border-white/10">
+  if (verified) {
+    return (
+      <AuthShell>
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-white">
-            Verify your account
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            Enter the 6-digit code we sent to your email
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-success/20 bg-success/10 text-success">
+            <CheckCircle2 className="h-7 w-7" />
+          </div>
+          <h1 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">
+            Email verified
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Your account for{" "}
+            <span className="font-medium text-foreground">
+              @{params.username}
+            </span>{" "}
+            is ready. Sign in to start collecting anonymous messages.
           </p>
-          <p className="text-sm text-orange-400 italic mt-2">
-            If you don’t see the email, check your spam/junk folder — sometimes
-            it likes to hide from inboxes! 😎
-          </p>
+          <Button
+            className="mt-6 w-full"
+            size="lg"
+            onClick={() => router.replace("/sign-in")}
+          >
+            Continue to sign in
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
+      </AuthShell>
+    );
+  }
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">
-                    Verification Code
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      className="bg-white/10 text-white border border-white/20 placeholder-gray-400 focus:ring-2 focus:ring-purple-500"
-                      placeholder="Enter 6-digit code"
-                      {...field}
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-gray-400">
-                    This is your 6-digit verification code.
-                  </FormDescription>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-md transition duration-200"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin" /> Verifying
-                </>
-              ) : (
-                "Verify"
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              disabled={isResending}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-md transition duration-200"
-              onClick={handleResendCode}
-            >
-              {isResending ? (
-                <>
-                  <Loader2 className="animate-spin" /> Resending
-                </>
-              ) : (
-                "Resend Code"
-              )}
-            </Button>
-          </form>
-        </Form>
+  return (
+    <AuthShell>
+      <div className="text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+          <MailCheck className="h-6 w-6" />
+        </div>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">
+          Verify your email
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          We sent a 6-digit code to the email linked to{" "}
+          <span className="font-medium text-foreground">
+            @{params.username}
+          </span>
+          . Enter it below to activate your account.
+        </p>
       </div>
-    </div>
+
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="mt-7 space-y-5"
+          noValidate
+        >
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Verification code</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="000000"
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    autoFocus
+                    className="h-12 text-center text-lg font-semibold tracking-[0.5em]"
+                    {...field}
+                    value={field.value || ""}
+                    onChange={(event) =>
+                      field.onChange(
+                        event.target.value.replace(/\D/g, "").slice(0, 6)
+                      )
+                    }
+                  />
+                </FormControl>
+                <FormDescription>
+                  Check your spam folder if the email hasn&apos;t arrived.
+                </FormDescription>
+                <FormMessage />
+                {errorMessage && (
+                  <p
+                    role="alert"
+                    className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                  >
+                    {errorMessage}
+                  </p>
+                )}
+              </FormItem>
+            )}
+          />
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full"
+            size="lg"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              "Verify account"
+            )}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isResending}
+            className="w-full"
+            onClick={handleResendCode}
+          >
+            {isResending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Resending...
+              </>
+            ) : (
+              <>
+                <RotateCcw className="h-4 w-4" />
+                Resend code
+              </>
+            )}
+          </Button>
+        </form>
+      </Form>
+
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        Wrong username?{" "}
+        <button
+          type="button"
+          onClick={() => router.replace("/sign-up")}
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Create a new account
+        </button>
+      </p>
+    </AuthShell>
   );
 };
 

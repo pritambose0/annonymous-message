@@ -1,15 +1,25 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { useDebounceCallback } from "usehooks-ts";
-import { toast } from "sonner";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signupSchema } from "@/schemas/signupSchema";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useDebounceCallback } from "usehooks-ts";
 import axios, { AxiosError } from "axios";
-import { ApiResponse } from "@/types/ApiResponse";
+import { toast } from "sonner";
+import {
+  AlertCircle,
+  Check,
+  Eye,
+  EyeOff,
+  Loader2,
+  X,
+} from "lucide-react";
+
+import AuthShell from "@/components/auth/AuthShell";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -20,15 +30,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
+import { signupSchema } from "@/schemas/signupSchema";
+import { ApiResponse } from "@/types/ApiResponse";
+
+type UsernameStatus = "idle" | "checking" | "available" | "unavailable" | "error";
 
 const Page = () => {
   const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] =
+    useState<UsernameStatus>("idle");
   const [usernameMessage, setUsernameMessage] = useState("");
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const debounced = useDebounceCallback(setUsername, 500);
 
@@ -43,162 +56,232 @@ const Page = () => {
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkUsernameUnique = async () => {
-      if (username) {
-        setIsCheckingUsername(true);
+      if (!username) {
+        setUsernameStatus("idle");
         setUsernameMessage("");
-        try {
-          const response = await axios.get(
-            `/api/check-username-unique?username=${username}`
-          );
-          setUsernameMessage(response.data.message);
-        } catch (error) {
-          const axiosError = error as AxiosError<ApiResponse>;
-          setUsernameMessage(
-            axiosError.response?.data.message ?? "Error checking username"
-          );
-        } finally {
-          setIsCheckingUsername(false);
-        }
+        return;
+      }
+
+      setUsernameStatus("checking");
+      setUsernameMessage("Checking availability...");
+
+      try {
+        const response = await axios.get<ApiResponse>(
+          `/api/check-username-unique?username=${username}`
+        );
+        if (cancelled) return;
+        setUsernameStatus("available");
+        setUsernameMessage(
+          response.data.message || "Username is available"
+        );
+      } catch (error) {
+        if (cancelled) return;
+        const axiosError = error as AxiosError<ApiResponse>;
+        const status = axiosError.response?.status;
+        setUsernameStatus(status === 400 ? "unavailable" : "error");
+        setUsernameMessage(
+          axiosError.response?.data.message ?? "Error checking username"
+        );
       }
     };
+
     checkUsernameUnique();
+
+    return () => {
+      cancelled = true;
+    };
   }, [username]);
 
   const onSubmit = async (data: z.infer<typeof signupSchema>) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
       const response = await axios.post<ApiResponse>("/api/signup", data);
 
       if (response.data.success) {
-        toast.success("Signup succesfull", {
+        toast.success("Account created", {
           description: response.data.message,
         });
+        router.replace(`/verify/${data.username}`);
       }
-      router.replace(`/verify/${username}`);
-      setIsSubmitting(false);
     } catch (error) {
-      console.error("Error while signing up", error);
       const axiosError = error as AxiosError<ApiResponse>;
-      const errorMessage = axiosError.response?.data.message;
-      toast.error("Signup failed", {
-        description: errorMessage,
+      toast.error("Sign up failed", {
+        description:
+          axiosError.response?.data.message ??
+          "Please check your details and try again.",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
 
+  const isUsernameBlocked =
+    usernameStatus === "unavailable" || usernameStatus === "checking";
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white px-4">
-      <div className="w-full max-w-md bg-gray-800 bg-opacity-80 rounded-2xl shadow-lg p-8 backdrop-blur-md border border-gray-700">
-        <h1 className="text-3xl font-bold mb-2 text-center">
-          Join Mystery Message
+    <AuthShell>
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Create your account
         </h1>
-        <p className="text-gray-400 mb-6 text-center">
-          Sign up to start your mystery journey
+        <p className="mt-2 text-sm text-muted-foreground">
+          Start collecting anonymous messages in a minute.
         </p>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <FormField
-              name="username"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Username</FormLabel>
-                  <FormControl>
-                    <Input
-                      className="bg-gray-700 border-gray-600 placeholder-gray-400 focus:ring-2 focus:ring-purple-500"
-                      placeholder="Enter Username"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        debounced(e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                  {isCheckingUsername && (
-                    <Loader2 className="animate-spin ml-2" />
-                  )}
-
-                  <p
-                    className={`${usernameMessage === "Username is available" ? "text-green-500" : "text-red-500"} mt-2 text-sm`}
-                  >
-                    {usernameMessage}
-                  </p>
-                  <FormDescription className="text-gray-500">
-                    This is your public display name.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="email"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      className="bg-gray-700 border-gray-600 placeholder-gray-400 focus:ring-2 focus:ring-purple-500"
-                      placeholder="Enter Email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="password"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-300">Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      className="bg-gray-700 border-gray-600 placeholder-gray-400 focus:ring-2 focus:ring-purple-500"
-                      placeholder="Enter Password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-gray-500">
-                    Use at least 8 characters.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-md transition duration-200"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing up
-                </>
-              ) : (
-                "Sign Up"
-              )}
-            </Button>
-          </form>
-        </Form>
-
-        <div className="mt-6 text-center text-sm text-gray-400">
-          Already a member?{" "}
-          <Link href="/sign-in" className="text-purple-500 hover:underline">
-            Sign in here
-          </Link>
-        </div>
       </div>
-    </div>
+
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="mt-7 space-y-5"
+          noValidate
+        >
+          <FormField
+            name="username"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="yourname"
+                    autoComplete="username"
+                    autoFocus
+                    {...field}
+                    onChange={(event) => {
+                      field.onChange(event);
+                      setUsernameStatus("idle");
+                      setUsernameMessage("");
+                      debounced(event.target.value);
+                    }}
+                  />
+                </FormControl>
+                <div
+                  aria-live="polite"
+                  className="min-h-[20px] text-xs"
+                  role="status"
+                >
+                  {usernameStatus === "checking" && (
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Checking availability...
+                    </span>
+                  )}
+                  {usernameStatus === "available" && (
+                    <span className="inline-flex items-center gap-1.5 text-success">
+                      <Check className="h-3.5 w-3.5" />
+                      {usernameMessage}
+                    </span>
+                  )}
+                  {usernameStatus === "unavailable" && (
+                    <span className="inline-flex items-center gap-1.5 text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                      {usernameMessage}
+                    </span>
+                  )}
+                  {usernameStatus === "error" && (
+                    <span className="inline-flex items-center gap-1.5 text-warning">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {usernameMessage}
+                    </span>
+                  )}
+                </div>
+                <FormDescription>
+                  2–20 characters, letters and numbers only.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="email"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            name="password"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Create a password"
+                      className="pr-11"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormDescription>Use at least 6 characters.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button
+            type="submit"
+            disabled={isSubmitting || isUsernameBlocked}
+            className="w-full"
+            size="lg"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create account"
+            )}
+          </Button>
+        </form>
+      </Form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link
+          href="/sign-in"
+          className="font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 };
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const messageSchema = z.object({
   content: z
     .string()
-    .min(10, { message: "Content must be atleast of 10 characters" })
-    .max(300, { message: "Content must be no longer than 300 characters" }),
+    .trim()
+    .min(3, { message: "Message must be at least 3 characters." })
+    .max(200, { message: "Message must be 200 characters or fewer." }),
 });

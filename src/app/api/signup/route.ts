@@ -29,7 +29,7 @@ export async function POST(request: Request) {
                   ? passwordErrors.join(", ")
                   : "Invalid username, email or password",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     if (existingUserByUsername) {
       return Response.json(
         { success: false, message: "Username is already taken" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       if (existingUserByEmail.isVerified) {
         return Response.json(
           { success: false, message: "Email is already taken" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       existingUserByEmail.password = hashedPassword;
       existingUserByEmail.verifyToken = verifyCode;
       existingUserByEmail.verifyTokenExpiry = new Date(
-        Date.now() + 10 * 60 * 1000
+        Date.now() + 10 * 60 * 1000,
       );
       await existingUserByEmail.save();
     } else {
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     const emailResponse = await sendVerificationEmail(
       email,
       username,
-      verifyCode
+      verifyCode,
     );
     // console.log("Email Response:", emailResponse);
 
@@ -99,19 +99,19 @@ export async function POST(request: Request) {
       await UserModel.deleteOne({ email });
       return Response.json(
         { success: false, message: emailResponse.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return Response.json(
       { success: true, message: "User registered successfully" },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Error registering user", error);
     return Response.json(
       { success: false, message: "Failed to register user" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
