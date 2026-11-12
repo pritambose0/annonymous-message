@@ -31,6 +31,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [lastPathname, setLastPathname] = useState(pathname);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const isAuthenticated = status === "authenticated";
@@ -38,10 +39,11 @@ export default function Navbar() {
   const email = session?.user?.email ?? "";
   const initial = (username || email || "M").charAt(0).toUpperCase();
 
-  useEffect(() => {
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
     setMobileOpen(false);
     setProfileOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (!profileOpen) return;

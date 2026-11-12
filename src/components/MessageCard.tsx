@@ -51,7 +51,7 @@ const MessageCard = ({ message, onMessageDelete }: MessageProps) => {
 
       if (response.data.success) {
         toast.success(response.data.message || "Message deleted");
-        onMessageDelete(message?._id as string);
+        onMessageDelete(String(message._id));
         setOpen(false);
       }
     } catch (error) {

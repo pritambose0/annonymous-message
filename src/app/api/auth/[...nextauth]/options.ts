@@ -43,7 +43,7 @@ export const authOptions: AuthOptions = {
           if (!isPasswordCorrect) {
             throw new Error("Password is incorrect");
           }
-          return user as NextAuthUser;
+          return user as unknown as NextAuthUser;
         } catch (error: unknown) {
           if (error instanceof Error) {
             throw new Error(error.message);

@@ -181,7 +181,7 @@ const Page = () => {
 
   const handleDeleteMessage = (messageId: string) => {
     setMessages((current) =>
-      current.filter((message) => message._id !== messageId)
+      current.filter((message) => String(message._id) !== messageId)
     );
   };
 
@@ -560,7 +560,7 @@ const Page = () => {
                 <AnimatePresence mode="popLayout">
                   {messages.map((message) => (
                     <MessageCard
-                      key={message._id as string}
+                      key={String(message._id)}
                       message={message}
                       onMessageDelete={handleDeleteMessage}
                     />

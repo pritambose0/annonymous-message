@@ -1,7 +1,7 @@
 import connectDB from "@/lib/connectDB";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
-import UserModel, { User } from "@/model/User";
+import UserModel from "@/model/User";
 
 export async function DELETE(
   request: Request,
@@ -12,9 +12,9 @@ export async function DELETE(
   await connectDB();
 
   const session = await getServerSession(authOptions);
-  const user: User = session?.user as User;
+  const userId = session?.user?._id;
 
-  if (!session || !session.user) {
+  if (!session || !session.user || !userId) {
     return Response.json(
       {
         success: false,
@@ -26,7 +26,7 @@ export async function DELETE(
 
   try {
     const result = await UserModel.updateOne(
-      { _id: user._id },
+      { _id: userId },
       { $pull: { messages: { _id: messageId } } }
     );
 
