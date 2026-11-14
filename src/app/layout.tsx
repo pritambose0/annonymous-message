@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "./context/AuthProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -7,9 +7,15 @@ import Navbar from "@/components/Navbar";
 import MotionProvider from "@/components/MotionProvider";
 import { googleSiteVerification, siteConfig, siteUrl } from "@/lib/site";
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -82,7 +88,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} dark`}>
+    <html
+      lang="en"
+      className={`${jakarta.variable} ${spaceGrotesk.variable} dark`}
+    >
       <AuthProvider>
         <MotionProvider>
           <body className="min-h-screen bg-background font-sans text-foreground antialiased">

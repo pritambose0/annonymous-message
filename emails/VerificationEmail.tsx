@@ -23,10 +23,10 @@ export default function VerificationEmail({
       <Head>
         <title>Verify Your Email</title>
         <Font
-          fontFamily="Inter"
+          fontFamily="Plus Jakarta Sans"
           fallbackFontFamily="Arial"
           webFont={{
-            url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap",
+            url: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap",
             format: "woff2",
           }}
           fontWeight={400}
@@ -45,7 +45,7 @@ export default function VerificationEmail({
             borderRadius: "12px",
             padding: "32px",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-            fontFamily: "Inter, Arial, sans-serif",
+            fontFamily: "'Plus Jakarta Sans', Arial, sans-serif",
           }}
         >
           <Heading
